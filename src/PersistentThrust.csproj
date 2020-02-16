@@ -1,4 +1,4 @@
-﻿<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -74,7 +74,7 @@
   </ProjectExtensions>
   <PropertyGroup>
     <PostBuildEvent>mkdir "E:/KSP/RO DEV/GameData/PersistentThrust/Plugins"
-cd $(SolutionDir)
+cd $(ProjectDir)
 xcopy /y /e /i "../Parts" "E:/KSP/RO DEV/GameData/PersistentThrust/Parts"
 xcopy /y /e /i "../Patches" "E:/KSP/RO DEV/GameData/PersistentThrust/Patches"
 xcopy /y /e /i "$(TargetPath)" "E:/KSP/RO DEV/GameData/PersistentThrust/Plugins"</PostBuildEvent>
