@@ -5,6 +5,11 @@ VisualStudioVersion = 15.0.28307.960
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistentThrust", "PersistentThrust.csproj", "{CD6C9ED6-EC4D-42CA-BAD8-DA856D49B4AF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolarSailNavigator", "..\..\SolarSailNavigator\src\SolarSailNavigator.csproj", "{6642E564-988E-403B-A043-C9548624753E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{CD6C9ED6-EC4D-42CA-BAD8-DA856D49B4AF} = {CD6C9ED6-EC4D-42CA-BAD8-DA856D49B4AF}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +20,10 @@ Global
 		{CD6C9ED6-EC4D-42CA-BAD8-DA856D49B4AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CD6C9ED6-EC4D-42CA-BAD8-DA856D49B4AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CD6C9ED6-EC4D-42CA-BAD8-DA856D49B4AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6642E564-988E-403B-A043-C9548624753E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6642E564-988E-403B-A043-C9548624753E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6642E564-988E-403B-A043-C9548624753E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6642E564-988E-403B-A043-C9548624753E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
