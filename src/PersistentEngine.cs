@@ -6,7 +6,6 @@ using UnityEngine;
 
 namespace PersistentThrust
 {
-
     public class PersistentEngine : PartModule
     {
         // Flag to activate force if it isn't to allow overriding stage activation
@@ -18,6 +17,8 @@ namespace PersistentThrust
         public bool RequestPropMassless = false;
         // Flag whether to request resources with mass
         public bool RequestPropMass = true;
+        // Flag if the engine is selected when a MultiModeEngine module is present
+        public bool IsMultiMode = false;
 
         // GUI
         // Enable/disable persistent engine features
@@ -35,7 +36,7 @@ namespace PersistentThrust
 
         // Engine module on the same part
         public ModuleEngines engine;
-        ModuleEnginesFX engineFX;
+        public MultiModeEngine multiMode;
 
         // Persistent values to use during timewarp
         public float IspPersistent = 0;
@@ -54,7 +55,7 @@ namespace PersistentThrust
         public double densityAverage;
 
         /// Initialization
-        public override void OnLoad (ConfigNode node)
+        public override void OnLoad(ConfigNode node)
         {
             // Run base OnLoad method
             base.OnLoad(node);
@@ -62,9 +63,8 @@ namespace PersistentThrust
             // Populate engine and engineFX fields
             FindModuleEngines();
 
-            if(IsPersistentEngine)
+            if (IsPersistentEngine)
             {
-
                 // Initialize PersistentPropellant list
                 pplist = PersistentPropellant.MakeList(engine.propellants);
 
@@ -74,13 +74,12 @@ namespace PersistentThrust
         }
 
         /// Update
-        public override void OnUpdate ()
+        public override void OnUpdate()
         {
-
-            if(IsPersistentEngine && PersistentEnabled)
+            if (IsPersistentEngine && PersistentEnabled)
             {
                 // When transitioning from timewarp to real update throttle
-                if(warpToReal)
+                if (warpToReal)
                 {
                     vessel.ctrlState.mainThrottle = ThrottlePersistent;
                     warpToReal = false;
@@ -97,7 +96,7 @@ namespace PersistentThrust
                 Throttle = Math.Round(ThrottlePersistent * 100).ToString() + "%";
 
                 // Activate force if engine is enabled and operational
-                if(!IsForceActivated && engine.isEnabled && engine.isOperational)
+                if (!IsForceActivated && engine.isEnabled && engine.isOperational)
                 {
                     IsForceActivated = true;
                     part.force_activate();
@@ -106,23 +105,29 @@ namespace PersistentThrust
         }
 
         /// Physics update
-        public override void OnFixedUpdate ()
+        public override void OnFixedUpdate()
         {
-            if(IsPersistentEngine && FlightGlobals.fetch != null && isEnabled && PersistentEnabled)
+            // Checks if engine mode wasn't switched
+            if (IsMultiMode)
+            {
+                FetchActiveMode();
+            }
+
+            if (IsPersistentEngine && FlightGlobals.fetch != null && isEnabled && PersistentEnabled)
             {
                 // Time step size
                 var dT = TimeWarp.fixedDeltaTime;
 
                 // Realtime mode
-                if(!this.vessel.packed)
+                if (!this.vessel.packed)
                 {
                     // Update persistent thrust parameters if NOT transitioning from warp to realtime
-                    if(!warpToReal)
+                    if (!warpToReal)
                         UpdatePersistentParameters();
                 }
 
                 // Timewarp mode: perturb orbit using thrust
-                else if(part.vessel.situation != Vessel.Situations.SUB_ORBITAL)
+                else if (part.vessel.situation != Vessel.Situations.SUB_ORBITAL)
                 {
                     warpToReal = true; // Set to true for transition to realtime
                     var UT = Planetarium.GetUniversalTime(); // Universal time
@@ -137,12 +142,12 @@ namespace PersistentThrust
                     var depleted = false;
                     var demandsOut = ApplyDemands(demands, ref depleted);
                     // Apply deltaV vector at UT & dT to orbit if resources not depleted
-                    if(!depleted)
+                    if (!depleted)
                     {
                         vessel.orbit.Perturb(deltaVV, UT);
                     }
                     // Otherwise log warning and drop out of timewarp if throttle on & depleted
-                    else if(ThrottlePersistent > 0)
+                    else if (ThrottlePersistent > 0)
                     {
                         Debug.Log("[PersistentThrust] Thrust warp stopped - propellant depleted");
                         ScreenMessages.PostScreenMessage("Thrust warp stopped - propellant depleted", 5.0f, ScreenMessageStyle.UPPER_CENTER);
@@ -152,7 +157,7 @@ namespace PersistentThrust
                 }
                 // Otherwise, if suborbital, set throttle to 0 and show error message
                 // TODO fix persistent thrust orbit perturbation on suborbital trajectory
-                else if(vessel.ctrlState.mainThrottle > 0)
+                else if (vessel.ctrlState.mainThrottle > 0)
                 {
                     vessel.ctrlState.mainThrottle = 0;
                     ScreenMessages.PostScreenMessage("Cannot accelerate and timewarp durring sub orbital spaceflight!", 5.0f, ScreenMessageStyle.UPPER_CENTER);
@@ -161,13 +166,13 @@ namespace PersistentThrust
         }
 
         /// Calculate demands of each resource
-        public virtual double[] CalculateDemands (double demandMass)
+        public virtual double[] CalculateDemands(double demandMass)
         {
             var demands = new double[pplist.Count];
-            if(demandMass > 0)
+            if (demandMass > 0)
             {
                 // Per propellant demand
-                for(var i = 0; i < pplist.Count; i++)
+                for (var i = 0; i < pplist.Count; i++)
                 {
                     demands[i] = pplist[i].Demand(demandMass);
                 }
@@ -177,23 +182,23 @@ namespace PersistentThrust
 
         /// Apply demanded resources & return results
         /// Updated depleted boolean flag if resource request failed
-        public virtual double[] ApplyDemands (double[] demands, ref bool depleted)
+        public virtual double[] ApplyDemands(double[] demands, ref bool depleted)
         {
             var demandsOut = new double[pplist.Count];
-            for(var i = 0; i < pplist.Count; i++)
+            for (var i = 0; i < pplist.Count; i++)
             {
                 var pp = pplist[i];
                 // Request resources if:
                 // - resource has mass & request mass flag true
                 // - resource massless & request massless flag true
-                if(((pp.density > 0 && RequestPropMass) || (pp.density == 0 && RequestPropMassless)) && !CheatOptions.InfinitePropellant)
+                if (((pp.density > 0 && RequestPropMass) || (pp.density == 0 && RequestPropMassless)) && !CheatOptions.InfinitePropellant)
                 {
                     var demandOut = part.RequestResource(pp.propellant.name, demands[i]);
                     demandsOut[i] = demandOut;
                     // Test if resource depleted
                     // TODO test if resource partially depleted: demandOut < demands[i]
                     // For the moment, just let the full deltaV for time segment dT be applied
-                    if(demandOut == 0)
+                    if (demandOut == 0)
                     {
                         depleted = true;
                         Debug.Log(String.Format("[PersistentThrust] Part {0} failed to request {1} {2}", part.name, demands[i], pp.propellant.name));
@@ -210,7 +215,7 @@ namespace PersistentThrust
         }
 
         /// Calculate DeltaV vector and update resource demand from mass (demandMass)
-        public virtual Vector3d CalculateDeltaVV (double m0, double dT, float thrust, float isp, Vector3d thrustUV, out double demandMass)
+        public virtual Vector3d CalculateDeltaVV(double m0, double dT, float thrust, float isp, Vector3d thrustUV, out double demandMass)
         {
             // Mass flow rate
             var mdot = thrust / (isp * 9.81f);
@@ -227,31 +232,39 @@ namespace PersistentThrust
         }
 
         /// Make "engine" and "engineFX" fields refer to the ModuleEngines and ModuleEnginesFX modules in part.Modules
-        void FindModuleEngines ()
+        private void FindModuleEngines()
         {
-            foreach(PartModule pm in part.Modules)
+            foreach (PartModule pm in part.Modules)
             {
-                if(pm is ModuleEngines)
+                if (pm is MultiModeEngine)
+                {
+                    multiMode = pm as MultiModeEngine;
+                    IsMultiMode = true;
+                }
+                else if (pm is ModuleEngines)
                 {
                     engine = pm as ModuleEngines;
                     IsPersistentEngine = true;
                 }
-                else
-                {
-                    Debug.Log("[PersistentThrust] No ModuleEngine found.");
-                }
-                if(pm is ModuleEnginesFX)
-                {
-                    engineFX = pm as ModuleEnginesFX;
-                }
+            }
+
+            if (!IsPersistentEngine)
+            {
+                Debug.Log("[PersistentThrust] No ModuleEngine found.");
             }
         }
 
+        /// Finds the active engine module from the MultiModeEngine partmodule
+        private void FetchActiveMode()
+        {
+            engine = multiMode.runningPrimary ? multiMode.PrimaryEngine as ModuleEngines : multiMode.SecondaryEngine as ModuleEngines;
+        }
+
         /// Update maximum G threshold for timewarp and persistent thrust/Isp/throttle values
-        void UpdatePersistentParameters ()
+        private void UpdatePersistentParameters()
         {
             // skip some ticks
-            if(skipCounter++ < 15) return;
+            if (skipCounter++ < 15) return;
 
             // we are on the 16th tick
             skipCounter = 0;
@@ -267,7 +280,5 @@ namespace PersistentThrust
             // Get final thrust
             ThrustPersistent = engine.finalThrust;
         }
-
-
     }
 }

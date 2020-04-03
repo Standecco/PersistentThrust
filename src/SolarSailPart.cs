@@ -40,9 +40,9 @@ namespace PersistentThrust
 
         /// GUI to deploy sail
         [KSPEvent(guiActive = true, guiName = "Deploy Sail", active = true)]
-        public void DeploySail ()
+        public void DeploySail()
         {
-            if(animName != null && solarSailAnim != null)
+            if (animName != null && solarSailAnim != null)
             {
                 solarSailAnim[animName].speed = 1f;
                 solarSailAnim[animName].normalizedTime = 0f;
@@ -53,9 +53,9 @@ namespace PersistentThrust
 
         /// GUI to retract sail
         [KSPEvent(guiActive = true, guiName = "Retract Sail", active = false)]
-        public void RetractSail ()
+        public void RetractSail()
         {
-            if(animName != null && solarSailAnim != null)
+            if (animName != null && solarSailAnim != null)
             {
                 solarSailAnim[animName].speed = -1f;
                 solarSailAnim[animName].normalizedTime = 1f;
@@ -65,16 +65,16 @@ namespace PersistentThrust
         }
 
         /// Initialization
-        public override void OnStart (StartState state)
+        public override void OnStart(StartState state)
         {
-            if(state != StartState.None && state != StartState.Editor)
+            if (state != StartState.None && state != StartState.Editor)
             {
-                if(animName != null)
+                if (animName != null)
                 {
                     solarSailAnim = part.FindModelAnimators(animName).FirstOrDefault();
                 }
 
-                if(IsEnabled)
+                if (IsEnabled)
                 {
                     solarSailAnim[animName].speed = 1f;
                     solarSailAnim[animName].normalizedTime = 0f;
@@ -85,7 +85,7 @@ namespace PersistentThrust
             }
         }
 
-        public override void OnUpdate ()
+        public override void OnUpdate()
         {
             // Sail deployment GUI
             Events["DeploySail"].active = !IsEnabled;
@@ -97,20 +97,20 @@ namespace PersistentThrust
             solarAcc = solar_acc_d.ToString("E") + " m/s";
         }
 
-        public override void OnFixedUpdate ()
+        public override void OnFixedUpdate()
         {
-            if(FlightGlobals.fetch != null)
+            if (FlightGlobals.fetch != null)
             {
                 double UT = Planetarium.GetUniversalTime();
                 double dT = TimeWarp.fixedDeltaTime;
 
                 solar_force_d = 0;
-                if(!IsEnabled) { return; }
+                if (!IsEnabled) { return; }
 
                 double sunlightFactor = 1.0;
 
                 // Not in sunlight
-                if(!inSun(vessel.orbit, UT))
+                if (!inSun(vessel.orbit, UT))
                 {
                     sunlightFactor = 0.0;
                     solar_force_d = 0.0;
@@ -126,7 +126,7 @@ namespace PersistentThrust
 
                     // Apply acceleration
                     // Realtime
-                    if(!this.vessel.packed)
+                    if (!this.vessel.packed)
                     {
                         vessel.ChangeWorldVelocity(solarAccel * dT);
                     }
@@ -144,24 +144,24 @@ namespace PersistentThrust
         }
 
         /// Test if an orbit at UT is in sunlight
-        public static bool inSun (Orbit orbit, double UT)
+        public static bool inSun(Orbit orbit, double UT)
         {
             Vector3d a = orbit.getPositionAtUT(UT);
             Vector3d b = FlightGlobals.Bodies[0].getPositionAtUT(UT);
-            foreach(CelestialBody referenceBody in FlightGlobals.Bodies)
+            foreach (CelestialBody referenceBody in FlightGlobals.Bodies)
             {
-                if(referenceBody.flightGlobalsIndex == 0)
+                if (referenceBody.flightGlobalsIndex == 0)
                 { // the sun should not block line of sight to the sun
                     continue;
                 }
                 Vector3d refminusa = referenceBody.getPositionAtUT(UT) - a;
                 Vector3d bminusa = b - a;
-                if(Vector3d.Dot(refminusa, bminusa) > 0)
+                if (Vector3d.Dot(refminusa, bminusa) > 0)
                 {
-                    if(Vector3d.Dot(refminusa, bminusa.normalized) < bminusa.magnitude)
+                    if (Vector3d.Dot(refminusa, bminusa.normalized) < bminusa.magnitude)
                     {
                         Vector3d tang = refminusa - Vector3d.Dot(refminusa, bminusa.normalized) * bminusa.normalized;
-                        if(tang.magnitude < referenceBody.Radius)
+                        if (tang.magnitude < referenceBody.Radius)
                         {
                             return false;
                         }
@@ -171,7 +171,7 @@ namespace PersistentThrust
             return true;
         }
 
-        private static double solarForceAtDistance (Vector3d sunPosition, Vector3d ownPosition)
+        private static double solarForceAtDistance(Vector3d sunPosition, Vector3d ownPosition)
         {
             double distance_from_sun = Vector3.Distance(sunPosition, ownPosition);
             double force_to_return = thrust_coeff * kerbin_distance * kerbin_distance / distance_from_sun / distance_from_sun;
@@ -180,16 +180,16 @@ namespace PersistentThrust
 
         /// Calculate solar force as function of
         /// sail, orbit, transform, and UT
-        public static Vector3d CalculateSolarForce (SolarSailPart sail, Orbit orbit, Vector3d normal, double UT)
+        public static Vector3d CalculateSolarForce(SolarSailPart sail, Orbit orbit, Vector3d normal, double UT)
         {
-            if(sail.part != null)
+            if (sail.part != null)
             {
                 Vector3d sunPosition = FlightGlobals.Bodies[0].getPositionAtUT(UT);
                 Vector3d ownPosition = orbit.getPositionAtUT(UT);
                 Vector3d ownsunPosition = ownPosition - sunPosition;
                 // If normal points away from sun, negate so our force is always away from the sun
                 // so that turning the backside towards the sun thrusts correctly
-                if(Vector3d.Dot(normal, ownsunPosition) < 0)
+                if (Vector3d.Dot(normal, ownsunPosition) < 0)
                 {
                     normal = -normal;
                 }

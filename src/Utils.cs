@@ -1,26 +1,29 @@
-using System;
+﻿using System;
 using System.Linq;
 using UnityEngine;
 
 namespace PersistentThrust
 {
-
     public class Utils
     {
         /// Format thrust into mN, N, kN
-        public static string FormatThrust (double thrust)
+        public static string FormatThrust(double thrust)
         {
-            if(thrust < 0.001)
+            if (thrust < 1e-6)
             {
-                return Math.Round(thrust * 1000000.0, 3).ToString() + " mN";
+                return $"{thrust * 1e9:F2} μN";
             }
-            else if(thrust < 1.0)
+            if (thrust < 1e-3)
             {
-                return Math.Round(thrust * 1000.0, 3).ToString() + " N";
+                return $"{thrust * 1e6:F2} mN";
+            }
+            else if (thrust < 1.0)
+            {
+                return $"{thrust * 1e3:F2} N";
             }
             else
             {
-                return Math.Round(thrust, 3).ToString() + " kN";
+                return $"{thrust:F2} kN";
             }
         }
     }

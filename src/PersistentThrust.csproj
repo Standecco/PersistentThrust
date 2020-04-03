@@ -70,10 +70,10 @@
     <VisualStudio AllowExistingFolder="true" />
   </ProjectExtensions>
   <PropertyGroup>
-    <PostBuildEvent>mkdir "E:/KSP/RO DEV/GameData/PersistentThrust/Plugins"
+    <PostBuildEvent>mkdir "E:\KSP\RO DEV\GameData\PersistentThrust\Plugins"
 cd $(ProjectDir)
-xcopy /y /e /i "../Parts" "E:/KSP/RO DEV/GameData/PersistentThrust/Parts"
-xcopy /y /e /i "../Patches" "E:/KSP/RO DEV/GameData/PersistentThrust/Patches"
-xcopy /y /e /i "$(TargetPath)" "E:/KSP/RO DEV/GameData/PersistentThrust/Plugins"</PostBuildEvent>
+xcopy /y /e /i "..\Parts" "E:\KSP/RO DEV\GameData\PersistentThrust\Parts"
+xcopy /y /e /i "..\Patches" "E:\KSP/RO DEV\GameData\PersistentThrust\Patches"
+xcopy /y /e /i "$(ProjectDir)\bin\Debug" "E:\KSP\RO DEV\GameData\PersistentThrust\Plugins"</PostBuildEvent>
   </PropertyGroup>
 </Project>
